@@ -20,8 +20,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import alien4cloud.audit.annotation.Audit;
+import alien4cloud.model.orchestrators.locations.Location;
 import alien4cloud.model.orchestrators.locations.LocationResourceTemplate;
 import alien4cloud.orchestrators.locations.services.LocationResourceService;
+import alien4cloud.orchestrators.locations.services.LocationService;
 import alien4cloud.rest.model.RestResponse;
 import alien4cloud.rest.model.RestResponseBuilder;
 import alien4cloud.rest.orchestrator.model.CreateLocationResourceTemplateRequest;
@@ -44,6 +46,8 @@ import alien4cloud.utils.RestConstraintValidator;
 public class LocationResourcesController {
     @Inject
     private LocationResourceService locationResourceService;
+    @Inject
+    private LocationService locationService;
 
     @ApiOperation(value = "Add resource template to a location.", authorizations = { @Authorization("ADMIN") })
     @RequestMapping(method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -144,6 +148,8 @@ public class LocationResourcesController {
             @ApiParam(value = "Id of the location of the orchestrator to Auto configure the resources.", required = true) @PathVariable String locationId) {
         locationResourceService.deleteGeneratedResources(locationId);
         List<LocationResourceTemplate> generatedResoucres = locationResourceService.autoConfigureResources(locationId);
+        Location location = locationService.getOrFail(locationId);
+        locationResourceService.setLocationResourcesPortabilityDefinition(generatedResoucres, false, location.getDependencies());
         return RestResponseBuilder.<List<LocationResourceTemplate>> builder().data(generatedResoucres).build();
     }
 }

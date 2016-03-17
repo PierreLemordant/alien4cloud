@@ -24,3 +24,11 @@ properties:
     type: list
     entry_schema:
       type: string
+
+policies:
+  base.orchestratorOnDemandResources.keys: [IAASS, ORCHESTRATORS]
+  base.orchestratorOnDemandResources.readonly: [IAASS, ORCHESTRATORS]  
+  base.orchestratorOnDemandResources.compute.keys: [SUPPORTED_ARTIFACTS, RUNTIME_PACKAGES]
+  base.orchestratorOnDemandResources.matchingStage.readonly: [SUPPORTED_ARTIFACTS, RUNTIME_PACKAGES]  
+  base.orchestratorOnDemandResources.compute.matchingStage.readonly: [SUPPORTED_ARTIFACTS, RUNTIME_PACKAGES]
+  

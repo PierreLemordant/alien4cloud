@@ -189,6 +189,12 @@ public class DeploymentTopologyService {
 
     private DeploymentSubstitutionConfiguration getAvailableNodeSubstitutions(DeploymentTopology deploymentTopology) {
         Map<String, List<LocationResourceTemplate>> availableSubstitutions = deploymentNodeSubstitutionService.getAvailableSubstitutions(deploymentTopology);
+        for (List<LocationResourceTemplate> locationResourceTemplates : availableSubstitutions.values()) {
+            for (LocationResourceTemplate locationResourceTemplate : locationResourceTemplates) {
+                locationResourceService.setLocationResourcePortabilityDefinition(locationResourceTemplate, true, deploymentTopology.getDependencies());
+            }
+        }
+        
         DeploymentSubstitutionConfiguration dsc = new DeploymentSubstitutionConfiguration();
         Map<String, Set<String>> availableSubstitutionsIds = Maps.newHashMap();
         Map<String, LocationResourceTemplate> templates = Maps.newHashMap();

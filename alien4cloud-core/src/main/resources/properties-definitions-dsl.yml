@@ -1,10 +1,14 @@
 # Mapping definition for properties definition
 - constraint: alien4cloud.tosca.parser.impl.advanced.ConstraintParser
+- policy_definition: alien4cloud.tosca.parser.impl.advanced.StringListParser
 
 - properties: alien4cloud.common.ParsedPropertiesDefinitions
   properties:
     map: definitions
     type: property_definition
+  policies: 
+    map: policies
+    type: policy_definition
 
 - property_definition: alien4cloud.model.components.PropertyDefinition|propertyDefinitionChecker
   type: type
@@ -17,3 +21,4 @@
   constraints:
     list: constraints
     type: constraint
+

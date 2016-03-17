@@ -43,6 +43,8 @@ import alien4cloud.orchestrators.services.OrchestratorService;
 import alien4cloud.paas.OrchestratorPluginService;
 import alien4cloud.topology.TopologyServiceCore;
 import alien4cloud.topology.TopologyUtils;
+import alien4cloud.tosca.ToscaUtils;
+import alien4cloud.tosca.normative.NormativeComputeConstants;
 import alien4cloud.tosca.properties.constraints.exception.ConstraintValueDoNotMatchPropertyTypeException;
 import alien4cloud.tosca.properties.constraints.exception.ConstraintViolationException;
 import alien4cloud.utils.MapUtil;
@@ -89,7 +91,7 @@ public class LocationResourceService {
 
         List<LocationResourceTemplate> locationResourceTemplates = getResourcesTemplates(location.getId());
         LocationResources locationResources = new LocationResources(getLocationResourceTypes(locationResourceTemplates));
-        setLocationRessource(locationResourceTemplates, locationResources);
+        setLocationRessource(locationResourceTemplates, locationResources, location.getDependencies());
         return locationResources;
     }
 
@@ -108,7 +110,7 @@ public class LocationResourceService {
         setLocationRessourceTypes(allExposedTypes, location, locationResources);
 
         List<LocationResourceTemplate> locationResourceTemplates = getResourcesTemplates(location.getId());
-        setLocationRessource(locationResourceTemplates, locationResources);
+        setLocationRessource(locationResourceTemplates, locationResources, location.getDependencies());
         return locationResources;
     }
 
@@ -159,8 +161,11 @@ public class LocationResourceService {
 
     /**
      * Put the locationResourceTemplates to the appropriate List of the locationResources passed as param
+     * 
+     * @param dependencies
      */
-    private void setLocationRessource(List<LocationResourceTemplate> locationResourceTemplates, LocationResources locationResources) {
+    private void setLocationRessource(List<LocationResourceTemplate> locationResourceTemplates, LocationResources locationResources,
+            Set<CSARDependency> dependencies) {
         for (LocationResourceTemplate resourceTemplate : locationResourceTemplates) {
             String templateType = resourceTemplate.getTemplate().getType();
             if (locationResources.getConfigurationTypes().containsKey(templateType)) {
@@ -168,6 +173,45 @@ public class LocationResourceService {
             }
             if (locationResources.getNodeTypes().containsKey(templateType)) {
                 locationResources.getNodeTemplates().add(resourceTemplate);
+            }
+        }
+        setLocationResourcesPortabilityDefinition(locationResourceTemplates, false, dependencies);
+    }
+
+    public void setLocationResourcesPortabilityDefinition(Collection<LocationResourceTemplate> locationResourceTemplates, boolean isMatchingResource,
+            Collection<CSARDependency> dependencies) {
+        for (LocationResourceTemplate resourceTemplate : locationResourceTemplates) {
+            setLocationResourcePortabilityDefinition(resourceTemplate, isMatchingResource, dependencies);
+        }
+    }
+
+    private boolean isTypeAbstract(String type, Collection<CSARDependency> dependencies) {
+        IndexedNodeType exposedIndexedNodeType = csarRepoSearchService.getRequiredElementInDependencies(IndexedNodeType.class, type, dependencies);
+        if (exposedIndexedNodeType.isAbstract()) {
+            return true;
+        }
+        return false;
+    }
+
+    public void setLocationResourcePortabilityDefinition(LocationResourceTemplate resourceTemplate, boolean isMatchingResource,
+            Collection<CSARDependency> dependencies) {
+        String templateType = resourceTemplate.getTemplate().getType();
+        if (resourceTemplate.getTemplate().getPortability() == null) {
+            Map<String, AbstractPropertyValue> values = Maps.newHashMap();
+            resourceTemplate.getTemplate().setPortability(values);
+        }
+        // only if resource is a on demand resource
+        // boolean isOrchestratorResource = locationResources.getNodeTypes().containsKey(templateType);
+        boolean isCompute = ToscaUtils.isFromType(NormativeComputeConstants.COMPUTE_TYPE, templateType, resourceTemplate.getTypes());
+        boolean isOrchestratorOnDemandResource = !isTypeAbstract(templateType, dependencies);
+        // TODO: should be filtered by context
+        Map<String, PropertyDefinition> compatibilityDefinitions = portabilityDefinitionService.getAvailablePortabilityDefinitions(
+                isOrchestratorOnDemandResource, isCompute, isMatchingResource);
+        resourceTemplate.setPortabilityDefinitions(compatibilityDefinitions);
+        for (Entry<String, PropertyDefinition> cde : compatibilityDefinitions.entrySet()) {
+            if (!resourceTemplate.getTemplate().getPortability().containsKey(cde.getKey())) {
+                // for the moment, we set a null value when no entry (to initialize the editor)
+                resourceTemplate.getTemplate().getPortability().put(cde.getKey(), null);
             }
         }
     }
@@ -219,20 +263,6 @@ public class LocationResourceService {
         if (result.getData() == null) {
             return Lists.newArrayList();
         }
-        for (LocationResourceTemplate locationResourceTemplate : result.getData()) {
-            // TODO: should be filtered by context
-            Map<String, PropertyDefinition> compatibilityDefinitions = portabilityDefinitionService.getAvailablePortabilityDefinitions();
-            locationResourceTemplate.setPortabilityDefinitions(compatibilityDefinitions);
-            for (Entry<String, PropertyDefinition> cde : compatibilityDefinitions.entrySet()) {
-                if (locationResourceTemplate.getTemplate().getPortability() == null) {
-                    Map<String, AbstractPropertyValue> values = Maps.newHashMap();
-                    locationResourceTemplate.getTemplate().setPortability(values);
-                }
-                if (!locationResourceTemplate.getTemplate().getPortability().containsKey(cde.getKey())) {
-                    locationResourceTemplate.getTemplate().getPortability().put(cde.getKey(), null);
-                }
-            }
-        }
         return Lists.newArrayList(result.getData());
     }
 
@@ -268,6 +298,9 @@ public class LocationResourceService {
         locationResourceTemplate.setTypes(Lists.<String> newArrayList(resourceType.getElementId()));
         locationResourceTemplate.getTypes().addAll(resourceType.getDerivedFrom());
         locationResourceTemplate.setTemplate(nodeTemplate);
+        List<LocationResourceTemplate> locationResourceTemplates = getResourcesTemplates(locationId);
+        LocationResources locationResources = new LocationResources(getLocationResourceTypes(locationResourceTemplates));
+        setLocationResourcePortabilityDefinition(locationResourceTemplate, false, location.getDependencies());
         saveResource(location, locationResourceTemplate);
         return locationResourceTemplate;
     }

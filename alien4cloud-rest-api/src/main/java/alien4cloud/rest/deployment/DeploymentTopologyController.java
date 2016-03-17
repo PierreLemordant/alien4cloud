@@ -224,6 +224,7 @@ public class DeploymentTopologyController {
         deploymentTopologyDTO.setAvailableSubstitutions(deploymentConfiguration.getAvailableSubstitutions());
         deploymentTopologyDTO.setValidation(deploymentTopologyValidationService.validateDeploymentTopology(deploymentTopology));
         Map<String, LocationResourceTemplate> templates = locationResourceService.getMultiple(deploymentTopology.getSubstitutedNodes().values());
+        locationResourceService.setLocationResourcesPortabilityDefinition(templates.values(), true, topologyDTO.getTopology().getDependencies());
         deploymentTopologyDTO.setLocationResourceTemplates(templates);
         return deploymentTopologyDTO;
     }

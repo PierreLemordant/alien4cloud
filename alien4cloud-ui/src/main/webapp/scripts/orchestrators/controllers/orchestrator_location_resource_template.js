@@ -15,6 +15,14 @@ define(function(require) {
         return _.defined(map) && Object.keys(map).length > 0;
       };
 
+      $scope.isObjectEmpty = function(obj) {
+        if (_.undefined(obj)) {
+          return true;
+        }
+        for (var i in obj) if (obj.hasOwnProperty(i)) return false;
+        return true;        
+      }
+      
       $scope.updateLocationResource = function(propertyName, propertyValue) {
         $scope.onUpdate({
           propertyName: propertyName,

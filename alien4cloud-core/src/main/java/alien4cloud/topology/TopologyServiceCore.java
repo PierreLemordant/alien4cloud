@@ -268,6 +268,7 @@ public class TopologyServiceCore {
         nodeTemplate.setAttributes(indexedNodeType.getAttributes());
         nodeTemplate.setInterfaces(indexedNodeType.getInterfaces());
         nodeTemplate.setArtifacts(deploymentArtifacts);
+        nodeTemplate.setPortability(indexedNodeType.getPortability());
         if (templateToMerge != null && templateToMerge.getRelationships() != null) {
             nodeTemplate.setRelationships(templateToMerge.getRelationships());
         }

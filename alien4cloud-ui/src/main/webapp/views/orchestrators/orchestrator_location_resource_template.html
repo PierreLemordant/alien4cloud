@@ -109,16 +109,16 @@
   </div>
   
   <!-- Portability -->
-  <div>
+  <div ng-if="!isObjectEmpty(resourceTemplate.template.portability)">
     <div id="node-details-portability" class="clickable"
          ng-click="isPortabilityCollapsed = !isPortabilityCollapsed">
       <h4>
         <i class=" fa" ng-class="{'fa-caret-down' : !isPortabilityCollapsed, 'fa-caret-right': isPortabilityCollapsed}"></i>
-        {{'COMMON.PORTABILITY' | translate}}
+        {{'COMPONENTS.PORTABILITY.TITLE' | translate}}
       </h4>
     </div>
     <div id="node-details-portability-panel" collapse="isPortabilityCollapsed" class="topology-level">
-      <table class="table table-condensed" id="nodeTemplateProperties">
+      <table class="table table-condensed" id="nodeTemplatePortability">
         <tr ng-repeat="(portabilityKey, portabilityValue) in resourceTemplate.template.portability">
           <td>
             <property-display
@@ -129,8 +129,7 @@
                 property-value="portabilityValue"
                 on-save="updatePortabilityProperty(propertyName, propertyValue)"
                 condensed="condensed"
-                editable="true">
-                <!-- editable = "canEditProperty(propEntry.key)" -->
+                editable="resourceTemplate.portabilityDefinitions[portabilityKey].editable">
             </property-display>
           </td>
           <td>

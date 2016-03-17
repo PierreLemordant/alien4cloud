@@ -358,6 +358,7 @@
       "TAG_KEY" : "Le nom d'un tag doit contenir des lettres de a-Z, -, _ sans espace"
     },
     "PORTABILITY": {
+      "TITLE": "Portabilité",
       "IAASS": {
         "LABEL": "IaaSs",
         "VALUE": "Portabilité: IaaSs"
